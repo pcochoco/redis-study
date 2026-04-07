@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-single
+    ports:
+      - "6379:6379"
+    command: redis-server #redis 가 요청을 받는 역할
+    #redis-cli 로 설정 시 client로 활용 가능(redis-server 필요)
