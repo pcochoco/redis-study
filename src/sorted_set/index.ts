@@ -52,35 +52,33 @@ async function main() {
     const client = createRedisClient();
 
     try {
-        await client.zadd('leaderboard', 100, 'Alice')
-        await client.zadd('leaderboard', 95, 'Bob', 150, 'Charlie', 85, 'Dave')
+        await client.zadd('leaderboard', 100, 'Alice') //score, member
 
-        // 전체 조회 -> 낮은 점수부터 조회
+        //zadd
+        // 점수 옵션 기반 전체 조회 : 낮~높(-1 : 마지막 원소까지)
         const all = await client.zrange('leaderboard', 0, -1, 'WITHSCORES');
         console.log('ZRANGE:', all);
 
-        // ZADD의 옵션 
-        // NX : 존재하지 않을 떄만 추가
+        // NX : 존재하지 않을 때 추가
         const nxResult = await client.zadd('leaderboard', 'NX', 200, 'Eve');
-        const nxResult2 = await client.zadd('leaderboard', 'NX', 999, 'Alice'); // 이미 존재
-        console.log('ZADD NX Results:', nxResult, nxResult2); // 1 0
+        console.log('ZADD NX Results:', nxResult); // 1 
 
-        // XX : 존재할 떄만 업데이트
+        // XX : 존재할 때만 추가
         const xxResult = await client.zadd('leaderboard', 'XX', 150, 'Alice');
-        const xxResult2 = await client.zadd('leaderboard', 'XX', 300, 'Frank'); // 존재하지 않음
-        console.log('ZADD XX Results:', xxResult, xxResult2); // 0 0
+        console.log('ZADD XX Results:', xxResult); // 0 
         // 새로운 멤버가 추가 -> 1
         // 기존 멤버 점수가 변경, 아무 변화가 없다 -> 0
 
-        // GT : 새 점수가 더 클 떄만 업데이트
-        const aliceScore1 = await client.zscore('leaderboard', 'Alice');
-        await client.zadd('leaderboard', 'GT', 180, 'Alice'); // 업데이트 진행
-        const aliceScore2 = await client.zscore('leaderboard', 'Alice');
-        console.log('Alice Scores (GT):', aliceScore1, aliceScore2); // 150 180
+        // GT : 새 점수가 기존보다 클때만 업데이트
+        const aliceScore1 = await client.zscore('leaderboard', 'Alice'); //점수 가져오기
+
+        const aliceScore2 = await client.zadd('leaderboard', 'gt', 180, 'Alice'); //zadd : greater than 인 경우만 점수를 업데이트
+
+        console.log('Alice Scores (GT):', aliceScore1, aliceScore2); 
 
 
-        // ZRANGE : 범위 조회
-        const bottom3 = await client.zrange('leaderboard', 0, 2, 'WITHSCORES'); // 낮은 점수부터 조회
+        // zrange : 범위 조회
+        const bottom3 = await client.zrange('leaderboard', 0, 2, 'WITHSCORES'); // 낮은 점수부터 조회(2까지 포함)
         console.log('Bottom 3 ZRANGE:', bottom3);
 
         const top3 = await client.zrevrange('leaderboard', 0, 2, 'WITHSCORES'); // 높은 점수부터 조회
@@ -91,17 +89,16 @@ async function main() {
         console.log('Top 3 ZRANGE v6.2+:', top3_v62);
 
 
-        // 순위 조회 : ZRANK, ZREVRANK
-
-        // ZRANK : 낮은 점수 기준 순위 (0부터 시작)
+        // zrank : 순위 조회
+        // 낮은 점수 기준 순위 (0부터 시작)
         const rankAsc = await client.zrank('leaderboard', 'Alice');
         console.log('Alice Rank (Asc):', rankAsc);
 
-        // ZREVRANK : 높은 점수 기준 순위 (0부터 시작)
+        // zrevrank : 높은 점수 기준 순위 (0부터 시작)
         const rankDesc = await client.zrevrank('leaderboard', 'Alice');
         console.log('Alice Rank (Desc):', rankDesc);
 
-        // ZINCBY : 점수 증가
+        // zincrby : 점수 증가
         const newScore = await client.zincrby('leaderboard', 30, 'Bob');
         console.log('Bob New Score after ZINCRBY 30:', newScore);
 

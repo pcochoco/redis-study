@@ -54,15 +54,19 @@ async function main() {
     const client = createRedisClient(); //const : 불변객체 (참조 주소를 바꾸지 않음, state 변경 가능)
 
     try { 
-        await client.hset('user:1000', 'email', 'alice@example.com', 'age', '25')
+
+        await client.hset('user:1000', 'email', 'alice@example.com', 'age', '23');
 
         const name = await client.hget('user:1000', 'name');
+
         console.log('Name:', name); 
 
-        const [name2, email, age2] = await client.hmget('user:1000', 'name', 'email', 'age');
-        console.log('HMGET:', name2, email, age2);
+        const [name2, email, age] = await client.hmget('user:1000', 'name', 'email', 'age');
+
+        console.log('HMGET:', name2, email, age);
 
         const allField = await client.hgetall('user:1000');
+
         console.log('HGETALL:', allField);
 
         for (const [f, v] of Object.entries(allField)) {
@@ -72,8 +76,9 @@ async function main() {
         const hasPhone = await client.hexists('user:1000', 'phone');
         console.log('Has phone field:', hasPhone); // 0
 
-        const keys = await client.hkeys('user:1000'); //key
-        console.log('HKEYS:', keys); //fields
+        const fields = await client.hkeys('user:1000')
+
+        console.log('fields:', fields); 
 
         const vals = await client.hvals('user:1000');
         console.log('HVALS:', vals); //values 
